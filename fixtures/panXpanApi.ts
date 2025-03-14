@@ -52,8 +52,8 @@ export class PanXpanApi {
     return this.apiRequest('/createCampaign', 'POST', payload) as Promise<CreateCampaignResponse>;
   }
 
-  async deleteCampaign(campaignId: string): Promise<unknown> {
-    return this.apiRequest('/deleteCampaign', 'DELETE', campaignId);
+  async deleteCampaign({ campaign_id }: { campaign_id: string }): Promise<unknown> {
+    return this.apiRequest('/deleteCampaign', 'DELETE', { campaign_id });
   }
 
   async transferCampaign(payload: TransferCampaignRequest): Promise<string> {

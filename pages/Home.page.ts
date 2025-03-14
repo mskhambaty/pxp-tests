@@ -8,12 +8,14 @@ export class HomePage {
   private signUpWithEmailButton: Locator;
   private emailInput: Locator;
   private passwordInput: Locator;
+  private loginWithEmailButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.loginButton = this.page.getByRole('button', { name: 'Log In' });
     this.signUpButton = this.page.getByRole('button', { name: 'Sign Up' });
     this.signUpWithEmailButton = this.page.getByRole('button', { name: 'Sign up with email' });
+    this.loginWithEmailButton = this.page.getByRole('button', { name: 'Log in with Email' });
     this.emailInput = this.page.locator("input[type='email']");
     this.passwordInput = this.page.locator("input[type='password']");
   }
@@ -32,6 +34,20 @@ export class HomePage {
       this.page.waitForTimeout(5000),
     ]);
     await this.page.goto('/');
+  }
+
+  async loginUser(email: string, password: string): Promise<void> {
+    await this.page.goto('/');
+    await this.page.waitForTimeout(2000);
+    await this.loginButton.click();
+    await this.loginWithEmailButton.click();
+    await this.emailInput.fill(email);
+    await this.passwordInput.fill(password);
+    await Promise.all([
+      this.page.waitForResponse((res) => res.status() == 200 && res.url().includes('login')),
+      this.loginButton.last().click(),
+      this.page.waitForTimeout(5000),
+    ]);
   }
 
   async claimCampaign(link: string, email: string): Promise<void> {
