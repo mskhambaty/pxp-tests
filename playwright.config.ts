@@ -12,7 +12,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 3,
-  reporter: [['html', { open: 'never' }]],
+  reporter: [['html', { open: 'never' }], ['./custom-reporters/email-reporter.ts']],
   use: {
     baseURL: 'https://www.panxpan.com',
     video: 'on',

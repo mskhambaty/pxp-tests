@@ -10,7 +10,9 @@ export class ParticipantDashboardPage {
    * Navigates to the participant dashboard page.
    */
   async goto(): Promise<void> {
-    await this.page.goto('/account/participant-dashboard');
+    await this.page.goto('/');
+    await this.page.locator("[class*='Avatar']").first().click();
+    await this.page.getByRole('link', { name: 'Dashboard' }).click();
   }
 
   /**
