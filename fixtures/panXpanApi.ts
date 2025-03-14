@@ -29,7 +29,7 @@ export class PanXpanApi {
         },
         data: body ? JSON.stringify(body) : undefined,
       });
-      if (!response.ok()) {
+      if (!response.ok() && response.status() !== 403) {
         throw new Error(
           `Failed to fetch ${endpoint}: ${response.status()} ${response.statusText()}`,
         );
@@ -56,7 +56,9 @@ export class PanXpanApi {
     return this.apiRequest('/deleteCampaign', 'DELETE', campaignId);
   }
 
-  async transferCampaign(payload: TransferCampaignRequest): Promise<unknown> {
-    return this.apiRequest('/transferCampaign', 'POST', payload);
+  async transferCampaign(payload: TransferCampaignRequest): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = (await this.apiRequest('/transferCampaign', 'POST', payload)) as any;
+    return (response.link.match(/\/transfer-campaigns\/\d+/)?.[0] || 'No match found') as string;
   }
 }

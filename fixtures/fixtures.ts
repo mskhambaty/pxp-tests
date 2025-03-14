@@ -2,11 +2,15 @@ import { test as base } from '@playwright/test';
 import { PanXpanApi } from './panXpanApi';
 import { CampaignPage } from '../pages/Campaign.page';
 import { ParticipantDashboardPage } from '../pages/ParticipantDashboard.page';
+import { HomePage } from '../pages/Home.page';
+import { OrganizerDashboardPage } from '../pages/OrganizerDashboard.page';
 
 export const test = base.extend<{
   panXpanApi: PanXpanApi;
   campaignPage: CampaignPage;
   participantDashboardPage: ParticipantDashboardPage;
+  homePage: HomePage;
+  organizerDashboardPage: OrganizerDashboardPage;
   yopmail: {
     email: string;
     getConfirmationCode: () => Promise<string>;
@@ -22,6 +26,12 @@ export const test = base.extend<{
   },
   participantDashboardPage: async ({ page }, use) => {
     await use(new ParticipantDashboardPage(page));
+  },
+  homePage: async ({ page }, use) => {
+    await use(new HomePage(page));
+  },
+  organizerDashboardPage: async ({ page }, use) => {
+    await use(new OrganizerDashboardPage(page));
   },
   yopmail: async ({ browser }, use) => {
     const yopmailPage = await browser.newPage();
