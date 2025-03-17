@@ -59,9 +59,15 @@ export class HomePage {
   async claimCampaign(link: string, email: string): Promise<void> {
     await this.page.goto(link);
     await this.page.waitForTimeout(5000);
-    if (await this.page.locator('#chat-messages-list').isVisible()) {
-      await this.page.locator("button[aria-label='Minimize Chat']").click();
-    }
+    await this.page.addLocatorHandler(
+      this.page.frameLocator("iframe[title='Wix Chat']").locator('#chat-messages-list'),
+      async () => {
+        await this.page
+          .frameLocator("iframe[title='Wix Chat']")
+          .locator("button[aria-label='Minimize Chat']")
+          .click();
+      },
+    );
     await this.page.getByPlaceholder('Enter email address').fill(email);
     // eslint-disable-next-line playwright/no-force-option
     await this.page.getByRole('button', { name: 'Claim campaign' }).click({ force: true });
