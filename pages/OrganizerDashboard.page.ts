@@ -13,8 +13,8 @@ export class OrganizerDashboardPage {
    */
   async goto(): Promise<void> {
     await this.page.goto('/');
-    await this.page.locator("[class*='Avatar']").first().click();
-    await this.page.getByRole('link', { name: 'Dashboard' }).click();
+    await expect(this.page.getByRole('button', { name: 'Log In' })).toBeHidden({ timeout: 10000 });
+    await this.page.goto('/account/organizer-dashboard');
   }
 
   /**
@@ -28,15 +28,15 @@ export class OrganizerDashboardPage {
   }
 
   async changeFundraiserTitleTo(fundraiser: string, newTitle: string) {
-    const pagePromise = this.page.context().waitForEvent('page');
-    await this.page.waitForTimeout(5000);
-    await this.page
-      .getByRole('listitem')
-      .filter({ hasText: fundraiser })
-      .getByText('See details')
-      .click();
+    if (!this.page.url().endsWith('/account/organizer-dashboard')) {
+      await this.page.goto('/account/organizer-dashboard');
+    }
+    const createdFundraiser = this.page.getByRole('listitem').filter({ hasText: fundraiser });
+    await expect(createdFundraiser.getByText('364 days left')).toBeVisible({ timeout: 20000 });
+    await createdFundraiser.getByText('See details').click();
     await this.page.locator("input[name='my-fundraiser title']").fill(newTitle);
     await this.page.getByRole('link', { name: 'Preview' }).click();
+    const pagePromise = this.page.context().waitForEvent('page');
     const newPage = await pagePromise;
     await expect(newPage.getByRole('heading', { name: newTitle }).first()).toBeVisible();
   }

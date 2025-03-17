@@ -34,7 +34,7 @@ class EmailReporter implements Reporter {
     const status = result.status;
     let statusEmoji = '🟢';
 
-    if (status === 'failed') {
+    if (status === 'failed' || status === 'timedOut') {
       this.failedTests++;
       statusEmoji = '🔴';
     } else if (status === 'passed') {

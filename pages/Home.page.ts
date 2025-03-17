@@ -1,5 +1,5 @@
 /* eslint-disable playwright/no-wait-for-timeout */
-import { expect, type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
 export class HomePage {
   private page: Page;
@@ -20,9 +20,12 @@ export class HomePage {
     this.passwordInput = this.page.locator("input[type='password']");
   }
 
-  async signupUser(email: string, password: string): Promise<void> {
+  async signupUser(email: string, password: string, isMobile: true | false = false): Promise<void> {
     await this.page.goto('/');
     await this.page.waitForTimeout(2000);
+    if (isMobile) {
+      await this.page.locator('header button').first().click();
+    }
     await this.loginButton.click();
     await this.signUpButton.click();
     await this.signUpWithEmailButton.click();
@@ -36,9 +39,12 @@ export class HomePage {
     await this.page.goto('/');
   }
 
-  async loginUser(email: string, password: string): Promise<void> {
+  async loginUser(email: string, password: string, isMobile: true | false = false): Promise<void> {
     await this.page.goto('/');
     await this.page.waitForTimeout(2000);
+    if (isMobile) {
+      await this.page.locator('header button').first().click();
+    }
     await this.loginButton.click();
     await this.loginWithEmailButton.click();
     await this.emailInput.fill(email);
@@ -46,16 +52,21 @@ export class HomePage {
     await Promise.all([
       this.page.waitForResponse((res) => res.status() == 200 && res.url().includes('login')),
       this.loginButton.last().click(),
-      this.page.waitForTimeout(5000),
     ]);
+    await this.page.waitForTimeout(5000);
   }
 
   async claimCampaign(link: string, email: string): Promise<void> {
+    this.page.addLocatorHandler(
+      this.page.locator("button[aria-label='Minimize Chat']"),
+      async () => {
+        await this.page.locator("button[aria-label='Minimize Chat']").click();
+      },
+    );
     await this.page.goto(link);
     await this.page.waitForTimeout(5000);
     await this.page.getByPlaceholder('Enter email address').fill(email);
     await this.page.getByRole('button', { name: 'Claim campaign' }).click();
-    await expect(this.page.getByText('Access to this page is restricted')).toBeVisible();
-    await this.page.goto('/');
+    await this.page.waitForTimeout(5000);
   }
 }

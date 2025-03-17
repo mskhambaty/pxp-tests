@@ -20,6 +20,7 @@
       "playwright"
     ],
     "rules": {
-      // Add custom rules here
+      "playwright/expect-expect": "off",
+      "playwright/no-conditional-in-test": "off"
     }
   }

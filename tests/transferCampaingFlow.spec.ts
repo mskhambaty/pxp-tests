@@ -6,9 +6,14 @@ test('should succesfully transfer campaign to another user', async ({
   yopmail,
   homePage,
   organizerDashboardPage,
+  viewport,
 }) => {
   const fundraiser_name = `Test fund raiser ${new Date().toISOString()}`;
-  await homePage.signupUser(yopmail.email, 'testtest123');
+  let isMobile = false;
+  if (viewport?.width === 390) {
+    isMobile = true;
+  }
+  await homePage.signupUser(yopmail.email, 'testtest123', isMobile);
   const { campaign_id } = await panXpanApi.createCampaign({
     ...createCampaignPayload,
     fundraiser_name,

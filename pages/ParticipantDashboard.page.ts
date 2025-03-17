@@ -1,4 +1,4 @@
-import { type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export class ParticipantDashboardPage {
   private page: Page;
@@ -11,8 +11,8 @@ export class ParticipantDashboardPage {
    */
   async goto(): Promise<void> {
     await this.page.goto('/');
-    await this.page.locator("[class*='Avatar']").first().click();
-    await this.page.getByRole('link', { name: 'Dashboard' }).click();
+    await expect(this.page.getByRole('button', { name: 'Log In' })).toBeHidden({ timeout: 10000 });
+    await this.page.goto('/account/participant-dashboard');
   }
 
   /**

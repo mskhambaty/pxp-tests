@@ -34,7 +34,9 @@ export const test = base.extend<{
     await use(new OrganizerDashboardPage(page));
   },
   yopmail: async ({ browser }, use) => {
-    const yopmailPage = await browser.newPage();
+    const yopmailPage = await browser.newPage({
+      viewport: { width: 1280, height: 720 },
+    });
     yopmailPage.addLocatorHandler(yopmailPage.locator('.fc-dialog-container'), async () => {
       await yopmailPage.getByRole('button', { name: 'Consent' }).click();
     });

@@ -2,6 +2,12 @@ name: Playwright E2E Tests
 
 on:
   workflow_dispatch:
+    inputs:
+      send_report_email:
+        description: 'Send report email'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
   test:
@@ -11,6 +17,8 @@ jobs:
       USER_NAME: ${{ secrets.USER_NAME }}
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       API_KEY: ${{ secrets.API_KEY }}
+      SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

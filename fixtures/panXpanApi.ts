@@ -59,6 +59,16 @@ export class PanXpanApi {
   async transferCampaign(payload: TransferCampaignRequest): Promise<string> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response = (await this.apiRequest('/transferCampaign', 'POST', payload)) as any;
-    return (response.link.match(/\/transfer-campaigns\/\d+/)?.[0] || 'No match found') as string;
+    const link = response?.link || response?.transfer_link;
+    if (!link) {
+      throw new Error(
+        `Response does not contain a 'link' or 'transfer_link' property: ${JSON.stringify(response)}`,
+      );
+    }
+    const match = link.match(/\/transfer-campaigns\/\d+/)?.[0];
+    if (!match) {
+      throw new Error(`No match found in response link: ${link}`);
+    }
+    return match;
   }
 }

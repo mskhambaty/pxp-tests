@@ -90,11 +90,11 @@ export class CampaignPage {
   }
 
   /**
-   * Waits for the code verification email to arrive, waiting up to 2 minutes.
+   * Waits for the code verification email to arrive, waiting up to 1 minute.
    */
   async waitForCodeVerificationEmail(): Promise<void> {
     // eslint-disable-next-line playwright/no-wait-for-timeout
-    await this.page.waitForTimeout(120000);
+    await this.page.waitForTimeout(60000);
   }
 
   /**
