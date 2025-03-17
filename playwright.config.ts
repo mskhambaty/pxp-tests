@@ -15,20 +15,30 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }], ['list'], ['./custom-reporters/email-reporter.ts']],
   use: {
     baseURL: 'https://www.panxpan.com',
-    video: 'on',
     headless: true,
   },
 
   projects: [
     {
       name: 'Desktop',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+        video: {
+          mode: 'on',
+          size: { width: 1280, height: 720 },
+        },
+      },
     },
     {
       name: 'Mobile',
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },
+        video: {
+          mode: 'on',
+          size: { width: 390, height: 844 },
+        },
       },
     },
   ],

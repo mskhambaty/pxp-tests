@@ -19,7 +19,7 @@ jobs:
       API_KEY: ${{ secrets.API_KEY }}
       SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-      MAILGUN_DOMAIN: ${{ secrets.MAILGUN_API_DOMAIN }}
+      MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
 
     steps:

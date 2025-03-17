@@ -12,13 +12,12 @@ export class ParticipantDashboardPage {
   async goto(): Promise<void> {
     await this.page.goto('/');
     await expect(this.page.getByRole('button', { name: 'Log In' })).toBeHidden({ timeout: 10000 });
-    await this.page.addLocatorHandler(
-      this.page.locator("button[aria-label='Minimize Chat']"),
-      async () => {
-        await this.page.locator("button[aria-label='Minimize Chat']").click();
-      },
-    );
     await this.page.goto('/account/participant-dashboard');
+    // eslint-disable-next-line playwright/no-wait-for-timeout
+    await this.page.waitForTimeout(5000);
+    if (await this.page.locator('#chat-messages-list').isVisible()) {
+      await this.page.locator("button[aria-label='Minimize Chat']").click();
+    }
   }
 
   /**
