@@ -16,7 +16,7 @@ export default defineConfig({
   use: {
     baseURL: 'https://www.panxpan.com',
     video: 'on',
-    headless: false,
+    headless: true,
   },
 
   projects: [
