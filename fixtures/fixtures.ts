@@ -37,7 +37,7 @@ export const test = base.extend<{
     const yopmailPage = await browser.newPage({
       viewport: { width: 1280, height: 720 },
     });
-    yopmailPage.addLocatorHandler(yopmailPage.locator('.fc-dialog-container'), async () => {
+    await yopmailPage.addLocatorHandler(yopmailPage.locator('.fc-dialog-container'), async () => {
       await yopmailPage.getByRole('button', { name: 'Consent' }).click();
     });
     await yopmailPage.goto('https://yopmail.com/email-generator');

@@ -57,7 +57,7 @@ export class HomePage {
   }
 
   async claimCampaign(link: string, email: string): Promise<void> {
-    this.page.addLocatorHandler(
+    await this.page.addLocatorHandler(
       this.page.locator("button[aria-label='Minimize Chat']"),
       async () => {
         await this.page.locator("button[aria-label='Minimize Chat']").click();

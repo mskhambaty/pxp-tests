@@ -4,7 +4,7 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 4 * 60 * 1000,
+  timeout: 1.5 * 60 * 1000,
   expect: {
     timeout: 20000,
   },

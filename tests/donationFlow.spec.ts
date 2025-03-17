@@ -5,6 +5,7 @@ test('should donate to a fundraise', async ({
   participantDashboardPage,
   yopmail,
 }) => {
+  test.slow();
   await campaignPage.open('test-fundraiser-(donations-possible)');
   await campaignPage.donate({
     contributionAmount: 500,
