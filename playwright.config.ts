@@ -12,7 +12,12 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: 0,
   workers: 1,
-  reporter: [['html', { open: 'never' }], ['list'], ['./custom-reporters/email-reporter.ts']],
+  reporter: [
+    ['html', { open: 'never' }],
+    ['list'],
+    ['./custom-reporters/email-reporter.ts'],
+    ['./custom-reporters/slack-reporter.ts'],
+  ],
   use: {
     baseURL: 'https://www.panxpan.com',
     headless: true,

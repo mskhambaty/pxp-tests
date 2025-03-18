@@ -8,6 +8,11 @@ on:
         required: false
         default: 'false'
         type: boolean
+      send_slack_notification:
+        description: 'Send Slack notification'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
   test:
@@ -18,9 +23,13 @@ jobs:
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       API_KEY: ${{ secrets.API_KEY }}
       SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
+      SEND_SLACK_NOTIFICATION: ${{ github.event.inputs.send_slack_notification }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
       MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_SERVER_URL: ${{ github.server_url }}
 
     steps:
       - uses: actions/checkout@v4

@@ -1,7 +1,7 @@
 import { test } from '../fixtures/fixtures';
 import { createCampaignPayload } from '../payloads/createCampaignPayload';
 
-test('should succesfully update campaign description', async ({
+test.only('should succesfully update campaign description', async ({
   panXpanApi,
   homePage,
   organizerDashboardPage,
