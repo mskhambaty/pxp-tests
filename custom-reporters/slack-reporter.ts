@@ -36,59 +36,56 @@ class SlackReporter implements Reporter {
     const GITHUB_RUN_ID = process.env.GITHUB_RUN_ID;
     const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
     const GITHUB_SERVER_URL = process.env.GITHUB_SERVER_URL;
-    const SLACK_WEBHOOK_URL =
-      'https://hooks.slack.com/services/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';
-
+    const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
     const ACTIONS_RUN_URL = `${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}`;
     const ARTIFACTS_URL = `${ACTIONS_RUN_URL}/artifacts`;
 
-    console.log('ARTIFACTS_URL = ' + ACTIONS_RUN_URL);
-
     const summary = `
-      *🚀 Playwright Test Report*
-      *🟢 Passed:* ${this.passedTests}
-      *🔴 Failed:* ${this.failedTests}
-      *⚪ Skipped:* ${this.skippedTests}
-      *📊 Total:* ${totalTests}
-    `;
+    *🚀 Playwright Test Report*
+    *🟢 Passed:* ${this.passedTests}
+    *🔴 Failed:* ${this.failedTests}
+    *⚪ Skipped:* ${this.skippedTests}
+    *📊 Total:* ${totalTests}
 
-    console.log(summary);
+    *Test Results:*
+    ${this.testResults.join('\n')}
+  `;
 
-    // const payload = {
-    //   text: summary,
-    //   attachments: [
-    //     {
-    //       text: `View details: <${ACTIONS_RUN_URL}>`,
-    //       actions: [
-    //         {
-    //           type: 'button',
-    //           text: 'View GitHub Actions Run',
-    //           url: ACTIONS_RUN_URL,
-    //         },
-    //         {
-    //           type: 'button',
-    //           text: 'Download Artifacts',
-    //           url: ARTIFACTS_URL,
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // };
+    const payload = {
+      text: summary,
+      attachments: [
+        {
+          text: `View details: <${ACTIONS_RUN_URL}>`,
+          actions: [
+            {
+              type: 'button',
+              text: 'View GitHub Actions Run',
+              url: ACTIONS_RUN_URL,
+            },
+            {
+              type: 'button',
+              text: 'Download Artifacts',
+              url: ARTIFACTS_URL,
+            },
+          ],
+        },
+      ],
+    };
 
-    // try {
-    //   const response = await fetch(SLACK_WEBHOOK_URL!, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(payload),
-    //   });
+    try {
+      const response = await fetch(SLACK_WEBHOOK_URL!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    //   if (!response.ok) {
-    //     throw new Error(`Slack API responded with status: ${response.status}`);
-    //   }
-    //   console.log('Slack notification sent successfully');
-    // } catch (error) {
-    //   console.error('Error sending Slack notification:', error);
-    // }
+      if (!response.ok) {
+        throw new Error(`Slack API responded with status: ${response.status}`);
+      }
+      console.log('Slack notification sent successfully');
+    } catch (error) {
+      console.error('Error sending Slack notification:', error);
+    }
   }
 }
 
