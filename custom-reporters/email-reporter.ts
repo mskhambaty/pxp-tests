@@ -43,8 +43,10 @@ class EmailReporter implements Reporter {
       this.skippedTests++;
       statusEmoji = '⚪';
     }
-
-    this.testResults.push(`${statusEmoji} ${test.title} - ${status.toUpperCase()}`);
+    const projectName = test.parent?.project()?.name || 'Unknown Project';
+    this.testResults.push(
+      `${statusEmoji} [${projectName}] ${test.title} - ${status.toUpperCase()}`,
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
