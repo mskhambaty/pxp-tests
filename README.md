@@ -124,18 +124,23 @@ New test scripts should be placed inside the `tests/` directory and follow the P
 
 ## 🔄 GitHub Actions Workflow
 
-The repository includes a GitHub Actions workflow to automate test execution.
+The repository includes two GitHub Actions workflows to automate test execution. One can be manually triggered `Playwright E2E Tests - On Demand` while the other one runs every day at midnight (UTC) `Playwright E2E Tests - On Schedule`
 
 ### Workflow Configuration
 
 ```yaml
-name: Playwright E2E Tests
+name: Playwright E2E Tests - On Demand
 
 on:
   workflow_dispatch:
     inputs:
       send_report_email:
         description: 'Send report email'
+        required: false
+        default: 'false'
+        type: boolean
+      send_slack_notification:
+        description: 'Send Slack notification'
         required: false
         default: 'false'
         type: boolean
@@ -149,9 +154,14 @@ jobs:
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       API_KEY: ${{ secrets.API_KEY }}
       SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
+      SEND_SLACK_NOTIFICATION: ${{ github.event.inputs.send_slack_notification }}
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
       MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_SERVER_URL: ${{ github.server_url }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - uses: actions/checkout@v4
@@ -187,10 +197,11 @@ To manually trigger the GitHub Actions workflow:
 
 1. Navigate to your repository on GitHub.
 2. Click on the **Actions** tab.
-3. Locate the **Playwright E2E Tests** workflow in the left sidebar.
+3. Locate the **Playwright E2E Tests - On Demand** workflow in the left sidebar.
 4. Click on the **Run workflow** dropdown button.
 5. (Optional) Set `send_report_email` to true or false as required.
-6. Click the **Run workflow** button to start the pipeline.
+6. (Optional) Set `send_slack_notification` to true or false as required.
+7. Click the **Run workflow** button to start the pipeline.
 
 This will execute the Playwright tests as defined in the workflow.
 
