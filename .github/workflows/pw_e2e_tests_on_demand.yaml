@@ -1,0 +1,51 @@
+name: Playwright E2E Tests - On Demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_report_email:
+        description: 'Send report email'
+        required: false
+        default: 'false'
+        type: boolean
+      send_slack_notification:
+        description: 'Send Slack notification'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    env:
+      USER_NAME: ${{ secrets.USER_NAME }}
+      USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
+      API_KEY: ${{ secrets.API_KEY }}
+      SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
+      SEND_SLACK_NOTIFICATION: ${{ github.event.inputs.send_slack_notification }}
+      MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+      MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+      EMAIL_TO: ${{ secrets.EMAIL_TO }}
+      GITHUB_RUN_ID: ${{ github.run_id }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_SERVER_URL: ${{ github.server_url }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 5

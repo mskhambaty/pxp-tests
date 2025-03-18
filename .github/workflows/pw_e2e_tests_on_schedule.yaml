@@ -1,18 +1,8 @@
-name: Playwright E2E Tests
+name: Playwright E2E Tests - On Schedule
 
 on:
-  workflow_dispatch:
-    inputs:
-      send_report_email:
-        description: 'Send report email'
-        required: false
-        default: 'false'
-        type: boolean
-      send_slack_notification:
-        description: 'Send Slack notification'
-        required: false
-        default: 'false'
-        type: boolean
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight (UTC)
 
 jobs:
   test:
@@ -22,8 +12,8 @@ jobs:
       USER_NAME: ${{ secrets.USER_NAME }}
       USER_PASSWORD: ${{ secrets.USER_PASSWORD }}
       API_KEY: ${{ secrets.API_KEY }}
-      SEND_REPORT_EMAIL: ${{ github.event.inputs.send_report_email }}
-      SEND_SLACK_NOTIFICATION: ${{ github.event.inputs.send_slack_notification }}
+      SEND_REPORT_EMAIL: 'true'
+      SEND_SLACK_NOTIFICATION: 'true'
       MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
       MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
       EMAIL_TO: ${{ secrets.EMAIL_TO }}
