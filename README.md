@@ -90,16 +90,16 @@ To run Playwright tests locally:
 npx playwright test
 ```
 
-Run tests in headed mode (for debugging):
+Run tests in headed mode:
 
 ```sh
 npx playwright test --headed
 ```
 
-Run tests with slow motion:
+Run tests in debug mode:
 
 ```sh
-npx playwright test --slow-mo=500
+npx playwright test --debug
 ```
 
 Run a single test file:
