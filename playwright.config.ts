@@ -17,6 +17,7 @@ export default defineConfig({
     ['list'],
     ['./custom-reporters/email-reporter.ts'],
     ['./custom-reporters/slack-reporter.ts'],
+    ['./custom-reporters/numbered-reporter.ts'],
   ],
   use: {
     baseURL: 'https://www.panxpan.com',
