@@ -21,4 +21,5 @@ export const createCampaignPayload: CreateCampaignRequest = {
     artistic_style: 'Realistic',
   },
   description: '<p>Test description</p>',
+  is_test: true,
 };
