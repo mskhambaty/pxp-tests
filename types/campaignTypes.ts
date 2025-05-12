@@ -1,3 +1,5 @@
+// types/campaignTypes.ts
+
 export interface CreateCampaignRequest {
   tiers: {
     tier_type: 'paid' | 'free';
@@ -20,6 +22,7 @@ export interface CreateCampaignRequest {
     artistic_style: string;
   };
   description: string;
+  is_test?: boolean;
   community_site_link?: string;
   live_date?: string;
 }
