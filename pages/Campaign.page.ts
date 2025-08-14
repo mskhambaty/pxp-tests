@@ -1,5 +1,12 @@
-import { type Locator, type Page } from '@playwright/test';
+import { type Locator, type Page, expect } from '@playwright/test';
 
+/**
+ * Page object encapsulating interactions on a public campaign page.  It
+ * represents the flow a participant uses to donate to a campaign.  The
+ * original implementation relied on Wix‑generated selectors such as
+ * `#input_comp-lga0alwh` which change every time the site is published.
+ * We instead target inputs by stable IDs provided by the Wix developer.
+ */
 export class CampaignPage {
   private page: Page;
   private contributeNowButton: Locator;
@@ -10,14 +17,17 @@ export class CampaignPage {
   private checkoutEmailInput: Locator;
   private checkoutFirstName: Locator;
   private checkoutLastName: Locator;
+
   constructor(page: Page) {
     this.page = page;
-    this.contributeNowButton = this.page.getByRole('button', { name: 'Contribute Now' });
-    this.contributionAmountInput = this.page.locator('#input_comp-lga0alwh');
+    this.contributeNowButton = this.page.getByRole('button', { name: /contribute now/i });
+    // Ask your Wix developer to rename the contribution amount input to the ID
+    // `contributionAmountInput` so it can be selected reliably.
+    this.contributionAmountInput = this.page.locator('#contributionAmountInput');
     this.addAdditionalCollectiblesButton = this.page.getByRole('button', {
-      name: 'Add additional digital collectibles',
+      name: /add additional digital collectibles/i,
     });
-    this.continueButton = this.page.getByRole('button', { name: 'Continue' });
+    this.continueButton = this.page.getByRole('button', { name: /continue/i });
     this.termsCheckbox = this.page.locator("input[type='checkbox']");
     this.checkoutEmailInput = this.page
       .frameLocator("iframe[src*='payment']")
@@ -31,24 +41,18 @@ export class CampaignPage {
   }
 
   /**
-   * Navigates to the specified campaign page.
+   * Navigate to a campaign by its slug or name.
    *
-   * @param {string} campaignName - The name of the campaign to open.
+   * @param campaignName slug of the campaign route (e.g. `my-campaign`)
    */
   async open(campaignName: string): Promise<void> {
     await this.page.goto(`/projects/${campaignName}`);
   }
 
   /**
-   * Donates to the campaign, optionally selecting additional collectibles and providing checkout details.
-   *
-   * @param {Object} donationDetails - The details for the donation.
-   * @param {number} donationDetails.contributionAmount - The amount to contribute.
-   * @param {Array<{ name: string, quantity: number }>} [donationDetails.additionalCollectibles] - Optional list of additional collectibles to add.
-   * @param {Object} donationDetails.checkoutDetails - The checkout details.
-   * @param {string} donationDetails.checkoutDetails.email - The email address for the checkout.
-   * @param {string} donationDetails.checkoutDetails.firstName - The first name for the checkout.
-   * @param {string} donationDetails.checkoutDetails.lastName - The last name for the checkout.
+   * Donate to the current campaign.  Accepts the amount, optional additional
+   * collectibles and checkout details.  The flow follows the on‑site payment
+   * integration and uses stable selectors.
    */
   async donate({
     contributionAmount,
@@ -80,27 +84,28 @@ export class CampaignPage {
     await this.checkoutLastName.fill(checkoutDetails.lastName);
     await this.page
       .frameLocator("iframe[src*='payment']")
-      .getByRole('button', { name: 'Continue' })
+      .getByRole('button', { name: /continue/i })
       .click();
     await this.page
       .frameLocator("iframe[src*='payment']")
-      .getByRole('button', { name: 'Continue' })
+      .getByRole('button', { name: /continue/i })
       .click();
     await this.page.frameLocator("iframe[src*='payment']").locator("[aria-label='Close']").click();
   }
 
   /**
-   * Waits for the code verification email to arrive, waiting up to 1 minute.
+   * Wait for a verification email to arrive.  In a real test this should be
+   * replaced with polling a test inbox or intercepting mailgun.  Here we
+   * simulate by waiting.
    */
   async waitForCodeVerificationEmail(): Promise<void> {
-    // eslint-disable-next-line playwright/no-wait-for-timeout
     await this.page.waitForTimeout(60000);
   }
 
   /**
-   * Enters the provided verification code into the form.
+   * Enter the verification code into the multi‑input verification form.
    *
-   * @param {string} verificationCode - The verification code to enter.
+   * @param verificationCode 6‑digit code from the email
    */
   async enterVerificationCode(verificationCode: string): Promise<void> {
     let index = 0;
@@ -113,9 +118,8 @@ export class CampaignPage {
   }
 
   /**
-   * Signs up a newly created user with the provided password.
-   *
-   * @param {string} password - The password to set for the new user.
+   * After donation, newly created participants must set a password.  Fill the
+   * password input and click the sign‑up button.
    */
   async signupNewlyCreatedUserWithPassword(password: string): Promise<void> {
     await this.page.locator("input[name='create-password']").fill(password);
