@@ -1,5 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
+// Use the extended test fixtures to access custom page objects like
+// organizerDashboardPage.  Import expect from the same module to keep
+// consistency with other specs.
+import { test, expect } from '../../fixtures/fixtures';
 import { CollectiblePage } from '../../pages/Collectible.page';
 import { RewardsPage } from '../../pages/Rewards.page';
 
