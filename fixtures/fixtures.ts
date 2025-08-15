@@ -5,6 +5,10 @@ import { ParticipantDashboardPage } from '../pages/ParticipantDashboard.page';
 import { HomePage } from '../pages/Home.page';
 import { OrganizerDashboardPage } from '../pages/OrganizerDashboard.page';
 
+// Extend the base test fixture to include our custom fixtures: PanXpanApi,
+// page objects for campaign and dashboards, and a Yopmail helper for email
+// verification.  These fixtures are used throughout the test suite.
+
 export const test = base.extend<{
   panXpanApi: PanXpanApi;
   campaignPage: CampaignPage;
@@ -37,11 +41,11 @@ export const test = base.extend<{
     const yopmailPage = await browser.newPage({
       viewport: { width: 1280, height: 720 },
     });
+    // Handle cookie consent dialogs on Yopmail
     await yopmailPage.addLocatorHandler(yopmailPage.locator('.fc-dialog-container'), async () => {
       await yopmailPage.getByRole('button', { name: 'Consent' }).click();
     });
     await yopmailPage.goto('https://yopmail.com/email-generator');
-
     let email = await yopmailPage.locator('#egen').textContent();
     if (!email) {
       throw new Error('Failed to retrieve email from Yopmail.');

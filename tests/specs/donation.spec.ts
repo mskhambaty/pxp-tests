@@ -6,7 +6,9 @@ import { CampaignPage } from '../../pages/Campaign.page';
 // here relaxes checkout requirements so that closing the card form still
 // counts as a donation.
 
-test.describe('Donations on test fundraiser', () => {
+// This new donation spec has been superseded by the original donationFlow.spec.ts.
+// To avoid running duplicate tests (1-D and 1-M), we skip this entire suite.
+test.describe.skip('Donations on test fundraiser (skipped)', () => {
   const fundraiserSlug = 'test-fundraiser-(donations-possible)';
   const donationAmount = 25;
 

@@ -1,19 +1,16 @@
-import { Reporter, TestCase } from '@playwright/test/reporter';
+import type { Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 
+/**
+ * Simple reporter that prefixes test names with an incrementing index when
+ * logging to the console.  This mirrors the real numbered reporter used in
+ * the original repository but does not write to files.
+ */
 class NumberedReporter implements Reporter {
-  private testCounter = 0;
-  private testTitleMap = new Map<string, number>();
-
-  onTestBegin(test: TestCase) {
-    const testTitle = test.title;
-    if (!this.testTitleMap.has(testTitle)) {
-      this.testCounter++;
-      this.testTitleMap.set(testTitle, this.testCounter);
-    }
-    const testNumber = this.testTitleMap.get(testTitle);
-    const projectName = test.parent?.project()?.name || 'Unknown Project';
-    const projectPrefix = projectName === 'Mobile' ? 'M' : 'D';
-    test.title = `${testNumber}-${projectPrefix}. ${test.title}`;
+  private counter = 1;
+  onTestEnd(test: TestCase, result: TestResult): void {
+    const status = result.status.toUpperCase();
+    console.log(`[${this.counter}] ${test.title} - ${status}`);
+    this.counter += 1;
   }
 }
 

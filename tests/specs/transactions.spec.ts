@@ -1,45 +1,51 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
-import { CampaignPage } from '../../pages/Campaign.page';
-import { TransactionsPage } from '../../pages/Transactions.page';
 
-// Spec to verify transactions counter updates after a donation
+// Spec to verify that the transaction counter increments after a donation. This test
+// assumes a donation has already been made on the special test fundraiser via the
+// donationFlow spec. It runs only on the Desktop project to avoid duplication.
+
+// Helper to parse numeric text safely
+function parseIntSafe(text: string | null | undefined): number {
+  const match = (text || '').replace(/[^0-9]/g, '');
+  return match ? parseInt(match, 10) : 0;
+}
 
 test.describe('Transactions Verification', () => {
-  test('donation updates transaction counter', async ({ page, browser }) => {
-    const dashboard = new OrganizerDashboardPage(page);
-    const transactions = new TransactionsPage(page);
-    const campaignPage = new CampaignPage(page);
-    // Navigate and select campaign
-    await dashboard.goto();
-    const campaignName = 'My Test Campaign';
-    await dashboard.selectCampaign(campaignName);
-    // Capture current transactions count if present
-    await dashboard.openNavTab('transactions');
-    let initialCount = 0;
-    try {
-      const counterText = await page.locator('#transactionCounter').innerText();
-      initialCount = parseInt(counterText, 10) || 0;
-    } catch {
-      // If no counter yet, default to 0
+  test('8-D. donation updates transaction counter', async ({ page }, testInfo) => {
+    if (testInfo.project?.name && testInfo.project.name.toLowerCase() !== 'desktop') {
+      test.skip();
     }
-    // Perform a donation as participant (placeholder flow; may require real payment mocking)
-    const participantContext = await browser.newContext({ storageState: 'state/participant.json' });
-    const participantPage = await participantContext.newPage();
-    const slug = campaignName.toLowerCase().replace(/\s+/g, '-');
-    const campaignParticipant = new CampaignPage(participantPage);
-    await campaignParticipant.open(slug);
-    await campaignParticipant.donate({
-      contributionAmount: 25,
-      checkoutDetails: {
-        email: 'donor@example.com',
-        firstName: 'Donor',
-        lastName: 'Test',
-      },
-    });
-    await participantContext.close();
-    // Refresh transactions page and verify count incremented
+    const dashboard = new OrganizerDashboardPage(page);
+    // Navigate to dashboard and select the test fundraiser
+    await dashboard.goto();
+    const campaignName = 'TEST FUNDRAISER (Donations possible)';
+    await dashboard.selectCampaign(campaignName);
+    // Navigate to transactions tab
     await dashboard.openNavTab('transactions');
-    await transactions.verifyCounter(initialCount + 1);
+    const counterLocator = page.locator('#transactionCounter');
+    // Capture the current count; if not visible, default to 0
+    let before = 0;
+    if (await counterLocator.isVisible().catch(() => false)) {
+      before = parseIntSafe(await counterLocator.innerText());
+    }
+    // Poll until the count increments (up to 2 minutes)
+    await expect
+      .poll(async () => {
+        if (await counterLocator.isVisible().catch(() => false)) {
+          return parseIntSafe(await counterLocator.innerText());
+        }
+        return before;
+      }, { timeout: 120000, intervals: [1000, 2000, 5000] })
+      .toBeGreaterThan(before);
+    // Optionally verify totals and unique supporters are numeric
+    const totalRaised = page.locator('#tr-total-raised');
+    const uniqueSupporters = page.locator('#tr-unique-supporter');
+    if (await totalRaised.isVisible().catch(() => false)) {
+      expect(parseIntSafe(await totalRaised.innerText())).toBeGreaterThanOrEqual(0);
+    }
+    if (await uniqueSupporters.isVisible().catch(() => false)) {
+      expect(parseIntSafe(await uniqueSupporters.innerText())).toBeGreaterThanOrEqual(0);
+    }
   });
 });

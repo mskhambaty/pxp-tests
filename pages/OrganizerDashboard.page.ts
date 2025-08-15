@@ -1,30 +1,86 @@
 /* eslint-disable playwright/no-wait-for-timeout */
-import { expect, type Locator, type Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 /**
  * Page object for the organizer dashboard.
  *
- * The new dashboard UI removes the brittle selectors that relied on dynamic
- * text (such as “364 days left”) and instead exposes stable element IDs.  Ask
- * your Wix developer to rename the relevant controls in the Properties & Events
- * panel to match the IDs used below.  Each ID should remain unique and
- * unchanged across deployments.
+ * This implementation assumes your Wix developer has renamed key elements
+ * using the IDs specified in the testing documentation. These IDs must
+ * remain stable across deployments. The dashboard includes a left nav
+ * (dashboardTab, editTab, collectiblesTab, rewardsTab, achievementsTab,
+ * transactionsTab, payoutsTab) and a list of campaigns. It also exposes
+ * quick‑action buttons on each campaign card (preview, edit, view and add
+ * collectibles, rewards, achievements, transactions).
  */
 export class OrganizerDashboardPage {
-  private page: Page;
+  constructor(private page: Page) {}
 
-  constructor(page: Page) {
-    this.page = page;
+  /**
+   * Navigate to the organizer dashboard. If the user is not logged in
+   * (determined by presence of a Log In/Sign In button or link), this method
+   * performs a login using the USER_NAME and USER_PASSWORD environment
+   * variables. After authentication it navigates to the dashboard route. The
+   * Playwright baseURL should already point to https://www.panxpan.com.
+   */
+  async goto(): Promise<void> {
+    // Navigate to site root (baseURL defined in Playwright config)
+    await this.page.goto('/');
+    // Detect login controls; Wix may render them as buttons or links.
+    const loginBtn = this.page.getByRole('button', { name: /log in|sign in/i }).first();
+    const loginLnk = this.page.getByRole('link', { name: /log in|sign in/i }).first();
+    const isLoggedOut =
+      (await loginBtn.isVisible().catch(() => false)) ||
+      (await loginLnk.isVisible().catch(() => false));
+    if (isLoggedOut) {
+      const email = process.env.USER_NAME;
+      const password = process.env.USER_PASSWORD;
+      if (!email || !password) {
+        throw new Error('Missing USER_NAME or USER_PASSWORD environment variables for organizer login.');
+      }
+      // Open the login form (button or link)
+      if (await loginBtn.isVisible().catch(() => false)) {
+        await loginBtn.click().catch(() => {});
+      } else if (await loginLnk.isVisible().catch(() => false)) {
+        await loginLnk.click().catch(() => {});
+      }
+      // Fill credentials; prefer labelled inputs when available
+      const emailInput = this.page.getByLabel(/email/i).first();
+      const passwordInput = this.page.getByLabel(/password/i).first();
+      if (await emailInput.isVisible().catch(() => false)) {
+        await emailInput.fill(email);
+      } else {
+        await this.page.locator('input[type="email"]').first().fill(email);
+      }
+      if (await passwordInput.isVisible().catch(() => false)) {
+        await passwordInput.fill(password);
+      } else {
+        await this.page.locator('input[type="password"]').first().fill(password);
+      }
+      // Submit the login form
+      const submit = this.page.getByRole('button', { name: /log in|sign in|continue/i }).first();
+      await submit.click();
+      // Wait for redirect; if it fails, explicitly navigate to the organizer dashboard
+      await this.page
+        .waitForURL(/\/account\/organizer-dashboard/i, { timeout: 30000 })
+        .catch(async () => {
+          await this.page.goto('/account/organizer-dashboard');
+        });
+    } else {
+      // Already authenticated; navigate directly to the dashboard route
+      await this.page.goto('/account/organizer-dashboard');
+    }
+    // Confirm left nav loaded
+    await this.page.locator('#dashboardTab').first().waitFor({ timeout: 30000 });
   }
 
   /**
-   * Click a navigation tab in the dashboard’s left nav.  All tabs have
-   * predefined IDs (dashboardTab, editTab, collectiblesTab, rewardsTab,
-   * achievementsTab, transactionsTab, payoutsTab).  If an invalid tab is
-   * provided an error will be thrown.
+   * Click a navigation tab in the dashboard’s left nav. All tabs have
+   * predefined IDs. Throws if an unknown tab is provided.
    */
-  async openNavTab(tab: 'dashboard' | 'edit' | 'collectibles' | 'rewards' | 'achievements' | 'transactions' | 'payouts'): Promise<void> {
-    const tabIds: Record<string, string> = {
+  async openNavTab(
+    tab: 'dashboard' | 'edit' | 'collectibles' | 'rewards' | 'achievements' | 'transactions' | 'payouts',
+  ): Promise<void> {
+    const selectors: Record<string, string> = {
       dashboard: '#dashboardTab',
       edit: '#editTab',
       collectibles: '#collectiblesTab',
@@ -33,23 +89,18 @@ export class OrganizerDashboardPage {
       transactions: '#transactionsTab',
       payouts: '#payoutsTab',
     };
-    const selector = tabIds[tab];
-    if (!selector) {
-      throw new Error(`Unknown nav tab: ${tab}`);
-    }
+    const selector = selectors[tab];
+    if (!selector) throw new Error(`Unknown nav tab: ${tab}`);
     await this.page.locator(selector).click();
   }
 
   /**
-   * Navigate to the organizer dashboard.  This helper ensures that any
-   * unauthenticated logins are bypassed by waiting for the login button to
-   * disappear and then loads the dashboard route directly.
+   * Select a campaign from the dashboard list by its displayed name. Each
+   * campaign renders as a list item (li) containing the campaign’s name.
    */
-  async goto(): Promise<void> {
-    await this.page.goto('/');
-    // Wait for login button to hide to indicate the user is authenticated.
-    await expect(this.page.getByRole('button', { name: 'Log In' })).toBeHidden({ timeout: 10000 });
-    await this.page.goto('/account/organizer-dashboard');
+  async selectCampaign(fundraiser: string): Promise<void> {
+    await this.page.getByRole('listitem').filter({ hasText: fundraiser }).first().click();
+    await expect(this.page.locator('#dashboardTab')).toBeVisible();
   }
 
   /**
@@ -59,80 +110,56 @@ export class OrganizerDashboardPage {
    * @param newTitle   The new title to set on the campaign edit form.
    */
   async changeFundraiserTitleTo(fundraiser: string, newTitle: string): Promise<void> {
-    // Ensure we are on the organizer dashboard
+    // Ensure on dashboard
     if (!this.page.url().includes('/account/organizer-dashboard')) {
       await this.page.goto('/account/organizer-dashboard');
     }
-
-    // Locate the fundraiser card by its visible title text.  Each fundraiser
-    // renders as a listitem (li) with the campaign name in its text.  We
-    // filter to the card whose text contains the existing fundraiser name.
-    const fundraiserCard = this.page.getByRole('listitem').filter({ hasText: fundraiser });
-
-    // Click the card’s edit button to open the Edit Campaign screen.  The
-    // button should have the ID `editCampaignButton`.  If the ID hasn’t been
-    // applied yet, this locator falls back to a role‐based lookup.
-    const editButton: Locator = fundraiserCard.locator('#editCampaignButton');
-    const hasEditButton = await editButton.count();
-    if (hasEditButton > 0) {
+    // Locate card by name and open its edit action
+    const card = this.page.getByRole('listitem').filter({ hasText: fundraiser }).first();
+    const editButton = card.locator('#editCampaignButton');
+    if (await editButton.count()) {
       await editButton.first().click();
     } else {
-      await fundraiserCard.getByRole('button', { name: /edit/i }).click();
+      await card.getByRole('button', { name: /edit/i }).click();
     }
-
-    // Fill the new title using the renamed input ID `campaignTitleInput`.
+    // Fill new title and save
     await this.page.locator('#campaignTitleInput').fill(newTitle);
-
-    // Save changes via the renamed save button `saveChangesButton`.
     await this.page.locator('#saveChangesButton').click();
-
-    // Wait for the toast notification to appear.  The toast container should
-    // have the ID `toastNotification` and include the word “saved”.
+    // Verify toast
     const toast = this.page.locator('#toastNotification');
     await expect(toast).toContainText(/saved/i);
-
-    // Return to the organizer dashboard and verify the updated title appears.
+    // Go back and verify new title is displayed
     await this.page.goto('/account/organizer-dashboard');
     await expect(this.page.getByRole('listitem').filter({ hasText: newTitle })).toBeVisible();
   }
 
   /**
-   * Select a campaign from the organizer dashboard by its displayed name.  When you log
-   * in you are presented with a list of all campaigns associated with your
-   * account.  Clicking a list item navigates to that campaign’s dashboard where
-   * the left nav is available.  Each list item is a `<li>` containing the
-   * campaign title; we simply click on the matching item.
-   *
-   * @param fundraiser The campaign name to open
+   * Click one of the quick action buttons on a campaign card while on the
+   * dashboard list view. The action keys map to specific IDs that must be
+   * set on the card buttons in Wix:
+   *  - preview: #c-preview
+   *  - editCampaign: #editCampaignButton
+   *  - viewCollectibles: #d-collectibles-btn
+   *  - addCollectible: #d-add-collectibles-btn
+   *  - viewRewards: #d-rewards-btn
+   *  - addReward: #d-add-rewards-btn
+   *  - viewAchievements: #d-achievement-btn
+   *  - addAchievement: #d-add-achievements-btn
+   *  - viewTransactions: #d-view-transaction
    */
-  async selectCampaign(fundraiser: string): Promise<void> {
-    await this.page.getByRole('listitem').filter({ hasText: fundraiser }).first().click();
-    // Wait for the campaign dashboard to load by checking the nav exists
-    await expect(this.page.locator('#dashboardTab')).toBeVisible();
-  }
-
-  /**
-   * Click one of the quick action buttons on the campaign dashboard card when on
-   * the organizer dashboard list view.  These actions include previewing the
-   * campaign, editing it, viewing collectibles, rewards, achievements and
-   * transactions, or adding new items.  Provide the action key to click the
-   * corresponding button.
-   *
-   * Available actions:
-   *  - preview: click the campaign preview button (id `c-preview`)
-   *  - editCampaign: click the edit campaign button (id `editCampaignButton`)
-   *  - viewCollectibles: click the “View all” collectibles button (id `d-collectibles-btn`)
-   *  - addCollectible: click the “Add New” collectibles button (id `d-add-collectibles-btn`)
-   *  - viewRewards: click the “View all” rewards button (id `d-rewards-btn`)
-   *  - addReward: click the “Add New” rewards button (id `d-add-rewards-btn`)
-   *  - viewAchievements: click the “View all” achievements button (id `d-achievement-btn`)
-   *  - addAchievement: click the “Add New” achievements button (id `d-add-achievements-btn`)
-   *  - viewTransactions: click the transactions card’s view button (id `d-view-transaction`)
-   *
-   * @param action One of the above action keys
-   */
-  async clickDashboardCardAction(action: 'preview' | 'editCampaign' | 'viewCollectibles' | 'addCollectible' | 'viewRewards' | 'addReward' | 'viewAchievements' | 'addAchievement' | 'viewTransactions'): Promise<void> {
-    const selectors: Record<typeof action, string> = {
+  async clickDashboardCardAction(
+    action:
+      | 'preview'
+      | 'editCampaign'
+      | 'viewCollectibles'
+      | 'addCollectible'
+      | 'viewRewards'
+      | 'addReward'
+      | 'viewAchievements'
+      | 'addAchievement'
+      | 'viewTransactions',
+  ): Promise<void> {
+    const selectors: Record<string, string> = {
       preview: '#c-preview',
       editCampaign: '#editCampaignButton',
       viewCollectibles: '#d-collectibles-btn',
@@ -142,7 +169,9 @@ export class OrganizerDashboardPage {
       viewAchievements: '#d-achievement-btn',
       addAchievement: '#d-add-achievements-btn',
       viewTransactions: '#d-view-transaction',
-    } as const;
-    await this.page.locator(selectors[action]).click();
+    };
+    const selector = selectors[action];
+    if (!selector) throw new Error(`Unknown dashboard action: ${action}`);
+    await this.page.locator(selector).click();
   }
 }

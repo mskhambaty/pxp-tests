@@ -1,30 +1,46 @@
-import { test, expect } from '@playwright/test';
-import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
+import { test } from '../../fixtures/fixtures';
+import { createCampaignPayload } from '../../payloads/createCampaignPayload';
 import { CollectiblePage } from '../../pages/Collectible.page';
 
-// This spec covers creating and editing collectibles on the organizer dashboard.
+// This spec covers creating and editing a paid collectible on a new test campaign.
+// It seeds a campaign via the API, logs in as the organizer, adds a collectible,
+// then edits the collectible price.  Afterwards it cleans up the campaign via API.
 
 test.describe('Collectibles Management', () => {
-  test('create and update paid collectible', async ({ page }) => {
-    const dashboard = new OrganizerDashboardPage(page);
+  test('4-D. create and update paid collectible', async (
+    { panXpanApi, organizerDashboardPage, page },
+    testInfo,
+  ) => {
+    // Run this spec only on the Desktop project
+    if (testInfo.project?.name && testInfo.project.name.toLowerCase() !== 'desktop') {
+      test.skip();
+    }
+    // Create a new test campaign via API
+    const fundraiser_name = `Auto Collectible ${new Date().toISOString()}`;
+    const { campaign_id } = await panXpanApi.createCampaign({
+      ...createCampaignPayload,
+      fundraiser_name,
+      organizer_email: process.env.USER_NAME || createCampaignPayload.organizer_email,
+    });
+    // Login and open dashboard
+    await organizerDashboardPage.goto();
+    // Select our campaign
+    await organizerDashboardPage.selectCampaign(fundraiser_name);
+    // Navigate to collectibles tab
+    await organizerDashboardPage.openNavTab('collectibles');
     const collectibles = new CollectiblePage(page);
-    // Navigate and open campaign
-    await dashboard.goto();
-    const campaignName = 'My Test Campaign';
-    await dashboard.selectCampaign(campaignName);
-    // Navigate to collectibles tab via side nav
-    await dashboard.openNavTab('collectibles');
-    // Create a new paid collectible using a placeholder image path (to be provided in fixtures)
-    const collectibleName = `Test Collectible ${Date.now()}`;
+    // Create a new paid collectible using AI generation (no imagePath provided)
+    const collectibleName = `Collectible ${Date.now()}`;
     await collectibles.createPaidCollectible({
       name: collectibleName,
       price: 50,
-      imagePath: undefined, // rely on AI generation
-      description: 'A beautiful badge',
+      description: 'Test collectible description',
       style: 'Illustration',
       metricAmount: 1,
     });
-    // Edit the collectible amount
+    // Edit the collectible price
     await collectibles.editPaidCollectibleAmount(collectibleName, 75);
+    // Clean up
+    await panXpanApi.deleteCampaign({ campaign_id: campaign_id.toString() });
   });
 });

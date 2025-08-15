@@ -2,6 +2,13 @@ import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+/**
+ * Playwright configuration for the PanXpan E2E test suite.  This config
+ * mirrors the original repository, setting the base URL to the public
+ * panxpan.com domain and defining Desktop and Mobile projects.  It also
+ * integrates custom reporters for email and Slack notifications if
+ * configured in the environment.
+ */
 export default defineConfig({
   testDir: './tests',
   timeout: 1.5 * 60 * 1000,
@@ -23,7 +30,6 @@ export default defineConfig({
     baseURL: 'https://www.panxpan.com',
     headless: true,
   },
-
   projects: [
     {
       name: 'Desktop',

@@ -1,11 +1,14 @@
 import { test, expect } from '../fixtures/fixtures';
 
-test('should donate to a fundraise', async ({
-  campaignPage,
-  participantDashboardPage,
-  yopmail,
-}) => {
+// This test covers the end‑to‑end donation flow for the special test fundraiser
+// that relaxes checkout requirements.  It opens the campaign, donates with
+// multiple additional collectibles, retrieves the email verification code via
+// Yopmail, and verifies the participant sees all purchased collectibles in
+// their dashboard.
+
+test('should donate to a fundraise', async ({ campaignPage, participantDashboardPage, yopmail }) => {
   test.slow();
+  // Use the slug for the special test fundraiser
   await campaignPage.open('test-fundraiser-(donations-possible)');
   await campaignPage.donate({
     contributionAmount: 500,
@@ -20,10 +23,13 @@ test('should donate to a fundraise', async ({
       lastName: 'Doe',
     },
   });
+  // Wait for the verification email to arrive and retrieve the code
   await campaignPage.waitForCodeVerificationEmail();
   const verificationCode = await yopmail.getConfirmationCode();
+  // Enter the code and set a password for the new participant
   await campaignPage.enterVerificationCode(verificationCode);
   await campaignPage.signupNewlyCreatedUserWithPassword('testtest123');
+  // Navigate to the participant dashboard and verify collectibles are visible
   await participantDashboardPage.goto();
   await expect(
     participantDashboardPage.getDigitalCollectibleWithName('Bronze Circle'),
@@ -31,5 +37,7 @@ test('should donate to a fundraise', async ({
   await expect(
     participantDashboardPage.getDigitalCollectibleWithName('Silver Circle'),
   ).toBeVisible();
-  await expect(participantDashboardPage.getDigitalCollectibleWithName('Gold Circle')).toBeVisible();
+  await expect(
+    participantDashboardPage.getDigitalCollectibleWithName('Gold Circle'),
+  ).toBeVisible();
 });

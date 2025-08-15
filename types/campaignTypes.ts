@@ -1,4 +1,6 @@
-// types/campaignTypes.ts
+// Definition of the PanXpan campaign types used by the API helper and
+// payloads.  Keeping these in a separate file makes it easy to update
+// whenever the API spec changes.
 
 export interface CreateCampaignRequest {
   tiers: {
@@ -31,6 +33,8 @@ export interface CreateCampaignResponse {
   campaign_id: number;
   campaign_url: string;
   message: string;
+  // The tiers property is loosely typed here; adjust if the API returns a
+  // specific shape.
   tiers: unknown[];
 }
 
