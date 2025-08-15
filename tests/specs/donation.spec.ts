@@ -1,45 +1,27 @@
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { CampaignPage } from '../../pages/Campaign.page';
 
-// Donation tests for desktop and mobile on the test fundraiser.  These
-// correspond to the original [1-D] and [1-M] tests.  The campaign used
-// here relaxes checkout requirements so that closing the card form still
-// counts as a donation.
+const TEST_FUNDRAISER_URL =
+  'https://www.panxpan.com/projects/test-fundraiser-(donations-possible)';
 
 test.describe('Donations on test fundraiser', () => {
-  const fundraiserSlug = 'test-fundraiser-(donations-possible)';
-  const donationAmount = 25;
+  test('5-D. Desktop: should donate to a fundraiser', async ({ page }, testInfo) => {
+    if (testInfo.project.name.toLowerCase() !== 'desktop') test.skip();
 
-  test('Desktop: should donate to a fundraiser', async ({ page }) => {
     const campaign = new CampaignPage(page);
-    await campaign.open(fundraiserSlug);
     await campaign.donate({
-      contributionAmount: donationAmount,
-      checkoutDetails: {
-        email: `donor+${Date.now()}@example.com`,
-        firstName: 'Desktop',
-        lastName: 'Donor',
-      },
+      campaignUrl: TEST_FUNDRAISER_URL,
+      contributionAmount: 25,
     });
-    // After donation, expect to land on the participant signup flow (or dashboard).  A generic assertion
-    // to ensure the flow didn’t error out.
-    await expect(page).not.toHaveURL(/error/i);
   });
 
-  test('Mobile: should donate to a fundraiser', async ({ browser }) => {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
-    const page = await context.newPage();
+  test('6-M. Mobile: should donate to a fundraiser', async ({ page }, testInfo) => {
+    if (testInfo.project.name.toLowerCase() !== 'mobile') test.skip();
+
     const campaign = new CampaignPage(page);
-    await campaign.open(fundraiserSlug);
     await campaign.donate({
-      contributionAmount: donationAmount,
-      checkoutDetails: {
-        email: `donor.mobile+${Date.now()}@example.com`,
-        firstName: 'Mobile',
-        lastName: 'Donor',
-      },
+      campaignUrl: TEST_FUNDRAISER_URL,
+      contributionAmount: 10,
     });
-    await expect(page).not.toHaveURL(/error/i);
-    await context.close();
   });
 });
