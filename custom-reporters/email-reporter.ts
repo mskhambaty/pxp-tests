@@ -1,10 +1,10 @@
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import Mailgun from 'mailgun.js';
-import FormData from 'form-data';
+import * as FormData from 'form-data';
 
 interface TestInfo {
   title: string;
-  status: 'passed' | 'failed' | 'skipped';
+  status: 'passed' | 'failed' | 'skipped' | 'interrupted' | 'timedOut';
   duration: number;
   error?: string;
   projectName?: string;

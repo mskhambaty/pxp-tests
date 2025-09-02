@@ -55,7 +55,10 @@ class SlackReporter implements Reporter {
       ? `${githubServerUrl}/${githubRepo}/actions/runs/${githubRunId}`
       : undefined;
 
-    const message = {
+    const message: {
+      text: string;
+      blocks: Array<Record<string, unknown>>;
+    } = {
       text: `Playwright Test Results ${status}`,
       blocks: [
         {
