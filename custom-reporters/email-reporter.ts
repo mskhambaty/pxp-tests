@@ -1,6 +1,6 @@
 import type { FullResult, Reporter, TestCase, TestResult } from '@playwright/test/reporter';
 import Mailgun from 'mailgun.js';
-import * as FormData from 'form-data';
+import FormData from 'form-data';
 
 interface TestInfo {
   title: string;
@@ -8,6 +8,7 @@ interface TestInfo {
   duration: number;
   error?: string;
   projectName?: string;
+  videoPath?: string;
 }
 
 /**
@@ -33,6 +34,14 @@ class EmailReporter implements Reporter {
       testInfo.error = result.error.message || result.error.toString();
     }
 
+    // Capture video path for failed tests
+    if (result.status === 'failed' && result.attachments) {
+      const videoAttachment = result.attachments.find(a => a.name === 'video');
+      if (videoAttachment && videoAttachment.path) {
+        testInfo.videoPath = videoAttachment.path;
+      }
+    }
+
     this.testResults.push(testInfo);
 
     if (result.status === 'passed') this.passed += 1;
@@ -49,6 +58,12 @@ class EmailReporter implements Reporter {
     const mailgunDomain = process.env.MAILGUN_DOMAIN;
     const emailTo = process.env.EMAIL_TO;
 
+    console.log(`[EmailReporter] Configuration check:`);
+    console.log(`  SEND_REPORT_EMAIL: ${sendReportEmail}`);
+    console.log(`  MAILGUN_API_KEY: ${mailgunApiKey ? '[SET]' : '[NOT SET]'}`);
+    console.log(`  MAILGUN_DOMAIN: ${mailgunDomain || '[NOT SET]'}`);
+    console.log(`  EMAIL_TO: ${emailTo || '[NOT SET]'}`);
+
     if (!sendReportEmail) {
       console.log(`[EmailReporter] Email reporting disabled. Completed run: ${summary}`);
       return;
@@ -61,6 +76,7 @@ class EmailReporter implements Reporter {
     }
 
     try {
+      console.log(`[EmailReporter] Attempting to send email to ${emailTo}...`);
       await this.sendEmailReport(mailgunApiKey, mailgunDomain, emailTo, result);
       console.log(`[EmailReporter] Email report sent successfully to ${emailTo}. ${summary}`);
     } catch (error) {
@@ -98,7 +114,18 @@ class EmailReporter implements Reporter {
       html: htmlBody,
     };
 
-    await mg.messages.create(domain, messageData);
+    console.log(`[EmailReporter] Sending email with subject: "${subject}"`);
+    console.log(`[EmailReporter] Email from: ${messageData.from}`);
+    console.log(`[EmailReporter] Email to: ${messageData.to}`);
+    console.log(`[EmailReporter] Using domain: ${domain}`);
+
+    try {
+      const response = await mg.messages.create(domain, messageData);
+      console.log(`[EmailReporter] Mailgun response:`, response);
+    } catch (error) {
+      console.error(`[EmailReporter] Mailgun error details:`, error);
+      throw error;
+    }
   }
 
   private generateHtmlReport(result: FullResult, runUrl?: string, githubRepo?: string): string {
@@ -132,7 +159,8 @@ class EmailReporter implements Reporter {
         .test-item.skipped { border-left-color: #ffc107; }
         .test-title { font-weight: bold; margin-bottom: 5px; }
         .test-meta { color: #666; font-size: 0.9em; margin-bottom: 10px; }
-        .test-error { background-color: #fff5f5; border: 1px solid #fed7d7; padding: 10px; border-radius: 3px; color: #c53030; font-family: monospace; font-size: 0.85em; white-space: pre-wrap; }
+        .test-error { background-color: #fff5f5; border: 1px solid #fed7d7; padding: 10px; border-radius: 3px; color: #c53030; font-family: monospace; font-size: 0.85em; white-space: pre-wrap; margin-bottom: 10px; }
+        .video-link { background-color: #e6f3ff; border: 1px solid #b3d9ff; padding: 10px; border-radius: 3px; color: #0066cc; font-size: 0.9em; margin-bottom: 10px; }
         .github-link { display: inline-block; background-color: #0366d6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 20px; }
         .github-link:hover { background-color: #0256c9; }
     </style>
@@ -169,15 +197,30 @@ class EmailReporter implements Reporter {
     ${failedTests.length > 0 ? `
     <div class="test-section">
         <h2>Failed Tests (${failedTests.length})</h2>
-        ${failedTests.map(test => `
+        ${failedTests.map(test => {
+          const total = this.passed + this.failed + this.skipped;
+          const avgDuration = Math.round((result.duration || 0) / total);
+          const testDuration = Math.round(test.duration);
+          const isSlowTest = testDuration > avgDuration * 1.5;
+          const timingContext = isSlowTest ? ` (⚠️ Slow: ${testDuration}ms vs avg ${avgDuration}ms)` : ` (${testDuration}ms)`;
+          
+          return `
         <div class="test-item failed">
             <div class="test-title">${test.title}</div>
             <div class="test-meta">
-                ${test.projectName ? `Project: ${test.projectName} | ` : ''}Duration: ${Math.round(test.duration)}ms
+                ${test.projectName ? `Project: ${test.projectName} | ` : ''}Duration: ${testDuration}ms${timingContext}
             </div>
-            ${test.error ? `<div class="test-error">${test.error}</div>` : ''}
+            ${test.error ? `<div class="test-error">
+                <strong>Error Details:</strong><br>
+                ${test.error}
+            </div>` : ''}
+            ${test.videoPath ? `<div class="video-link">
+                <strong>📹 Test Video:</strong> <em>Video recorded at: ${test.videoPath.split('/').pop()}</em><br>
+                <small>Video available in GitHub Actions artifacts for troubleshooting</small>
+            </div>` : ''}
         </div>
-        `).join('')}
+        `;
+        }).join('')}
     </div>
     ` : ''}
 
