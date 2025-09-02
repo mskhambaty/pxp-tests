@@ -37,7 +37,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 720 },
         video: {
-          mode: 'on',
+          mode: 'retain-on-failure',
           size: { width: 1280, height: 720 },
         },
       },
@@ -48,7 +48,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 390, height: 844 },
         video: {
-          mode: 'on',
+          mode: 'retain-on-failure',
           size: { width: 390, height: 844 },
         },
       },
