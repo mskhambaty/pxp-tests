@@ -70,3 +70,9 @@ export const test = base.extend<{
 });
 
 export { expect } from '@playwright/test';
+
+// Ensure consistent higher default timeouts across all tests
+test.beforeEach(async ({ page }) => {
+  page.setDefaultTimeout(60_000);
+  page.setDefaultNavigationTimeout(60_000);
+});

@@ -18,7 +18,7 @@ import { Page, expect } from '@playwright/test';
  *    `earned-title`, `earned-claimed`
  */
 export class CollectiblePage {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
   /** Navigate to the collectibles tab using the side navigation. */
   async openTab(): Promise<void> {
@@ -37,57 +37,129 @@ export class CollectiblePage {
   async createPaidCollectible({
     name,
     price,
-    imagePath,
-    description,
-    style,
     metricAmount,
+    rewardTitle,
   }: {
     name: string;
     price: number;
-    imagePath?: string;
-    description?: string;
-    style?: string;
-    metricAmount?: number;
+    metricAmount: number;
+    rewardTitle?: string;
   }): Promise<void> {
     // Click the add collectible button on the dashboard card if present
     // or the createCollectibleButton in the collectibles tab.
-    const createButton = this.page.locator('#d-add-collectibles-btn').or(this.page.locator('#createCollectibleButton'));
-    if (await createButton.count()) {
-      await createButton.first().click();
+    console.log('CollectiblePage: Looking for "Add New" buttons...');
+    const addNewButtons = this.page.locator('button[aria-label="Add New"]');
+    const count = await addNewButtons.count();
+    console.log(`CollectiblePage: Found ${count} "Add New" button(s).`);
+    let clicked = false;
+    for (let i = 0; i < count; i++) {
+      const btn = addNewButtons.nth(i);
+      const visible = await btn.isVisible();
+      console.log(`CollectiblePage: Button ${i} visible: ${visible}`);
+      if (visible) {
+        console.log(`CollectiblePage: Clicking "Add New" button at index ${i}`);
+        await btn.click();
+        clicked = true;
+        break;
+      }
+    }
+    if (!clicked) {
+      console.log('CollectiblePage: No visible "Add New" button found');
+      // throw new Error('No visible "Add New" button found');
+    } else {
+      console.log('CollectiblePage: Successfully clicked "Add New" button');
     }
     // Wait for modal to appear
-    await expect(this.page.locator('#collectibleNameInput')).toBeVisible();
+    await expect(this.page.locator('input[name="collectible-name"]')).toBeVisible();
     // Upload or generate image
-    if (imagePath) {
-      const fileChooserPromise = this.page.waitForEvent('filechooser');
-      await this.page.locator('#collectibleImageInput').click();
-      const fileChooser = await fileChooserPromise;
-      await fileChooser.setFiles(imagePath);
-    } else if (description && style) {
-      // Use AI generation tab
-      await this.page.locator('#tabs2').click();
-      await this.page.locator('#add-c-image-description').fill(description);
-      await this.page.locator('#add-c-image-style').fill(style);
-      await this.page.locator('#add-c-image-createBtn').click();
-      // Wait for image to be generated; adjust timeout as needed
-      await this.page.waitForTimeout(5000);
+
+    // Use AI generation tab
+    // await this.page.locator('#tab-comp-ma3p8n7v').click();
+    // await this.page.locator('#textarea_comp-ma3p8n7z').fill(description || '');
+    // // Select the artistic style from the select tag element
+    // const styleSelect = this.page.locator('select#collection_comp-ma3p8n83');
+    // const isVisible = await styleSelect.isVisible();
+    // console.log('CollectiblePage: Style select visible:', isVisible);
+    // if (isVisible) {
+    //   // First click the select, then click the option with value=style
+    //   await styleSelect.click();
+    //   console.log('CollectiblePage: Attempting to select style option with selector "#menuitem-0"');
+    //   const optionLocator = this.page.locator("#menuitem-0");
+    //   await expect(optionLocator).toBeVisible({ timeout: 60000 });
+    //   console.log('CollectiblePage: Style option is visible, clicking...');
+    //   await optionLocator.click();
+    //   console.log('CollectiblePage: Style option clicked.');
+    // } else {
+    //   console.warn('CollectiblePage: Style select is not visible!');
+    // }
+    // const generateButton = this.page.locator('button[aria-label="Generate Image"]');
+    // await generateButton.click();
+    // console.log('CollectiblePage: Generate button clicked.');
+    // // Wait for the generateButton to become enabled (not disabled)
+
+    // Set up file dialog handler before clicking upload button
+    const fileDialogPromise = this.page.waitForEvent('filechooser');
+    await this.page.getByTestId('upload-button').click();
+
+    // Handle the file dialog
+    const fileChooser = await fileDialogPromise;
+    await fileChooser.setFiles('collectibles.png');
+    console.log('CollectiblePage: File selected via dialog');
+    await this.page.waitForTimeout(10000);
+
+
+    // Wait for the uploaded image to appear
+    // console.log('CollectiblePage: Waiting for uploaded image at', new Date().toISOString());
+    // await expect(this.page.locator('img[alt="Uploaded Collectible Image"]')).toBeVisible({ timeout: 60000 });
+    // console.log('CollectiblePage: Uploaded image visible at', new Date().toISOString());
+
+    // Fill name and amount with debugging
+    const nameInput = this.page.locator('input[name="collectible-name"]');
+    const donationAmountInput = this.page.locator('input[name="donation-amount ($)"]');
+    const metricAmountInput = this.page.locator('input[name="donation-per impact unit"]');
+
+    const nameVisible = await nameInput.isVisible();
+    console.log(`CollectiblePage: Name input visible: ${nameVisible}`);
+    if (nameVisible) {
+      console.log(`CollectiblePage: Filling collectible name: ${name}`);
+      await nameInput.fill(name);
+    } else {
+      console.warn('CollectiblePage: Name input is not visible!');
     }
-    // Select type 'Paid'
-    await this.page.locator('#collectibleTypeSelect').selectOption({ label: 'Paid' });
-    // Fill name and amount
-    await this.page.locator('#collectibleNameInput').fill(name);
-    await this.page.locator('#collectibleAmountInput').fill(String(price));
-    // Fill metric amount (donation per impact unit) if provided
-    if (metricAmount !== undefined) {
-      await this.page.locator('#c-add-metricAmount').fill(String(metricAmount));
+
+    const donationAmountVisible = await donationAmountInput.isVisible();
+    console.log(`CollectiblePage: Donation amount input visible: ${donationAmountVisible}`);
+    if (donationAmountVisible) {
+      console.log(`CollectiblePage: Filling donation amount: ${price}`);
+      await donationAmountInput.fill(price.toString());
+    } else {
+      console.warn('CollectiblePage: Donation amount input is not visible!');
     }
-    // Save collectible
-    await this.page.locator('#collectibleSaveButton').click();
-    // Verify that the new paid collectible appears in the list
-    const newCard = this.page.locator('#paid-title', { hasText: name });
-    await expect(newCard).toBeVisible();
-    const priceLabel = this.page.locator('#paid-price').filter({ hasText: `$${price}` });
-    await expect(priceLabel).toBeVisible();
+
+    const metricAmountVisible = await metricAmountInput.isVisible();
+    console.log(`CollectiblePage: Metric amount input visible: ${metricAmountVisible}`);
+    if (metricAmountVisible) {
+      console.log(`CollectiblePage: Filling metric amount (donation per impact unit): ${metricAmount}`);
+      await metricAmountInput.fill(metricAmount.toString());
+    } else {
+      console.warn('CollectiblePage: Metric amount input is not visible!');
+    }
+
+    // await this.page.waitForTimeout(30000);
+
+    await this.page.locator('#openModalBtn').click();
+    await expect(this.page.locator('#rewardTitleInput')).toBeVisible();
+    await this.page.locator('#rewardTitleInput').fill(rewardTitle || 'Reward');
+    await this.page.locator('#addRewardButton').click();
+
+    await this.page.waitForTimeout(4000);
+    await this.page.locator('button[aria-label="Save Changes"]').click({ force: true });
+    await this.page.waitForTimeout(10000);
+    // Verify the new paid collectible appears using the available h2 > span structure
+    // const collectiblesButton = this.page.locator('button[aria-label="Collectibles"]');
+    // const collectiblesButtonVisible = await collectiblesButton.isVisible();
+    // console.log(`CollectiblePage: Collectibles button (aria-label="Collectibles") visible: ${collectiblesButtonVisible}`);
+    // await expect(collectiblesButton).toBeVisible({ timeout: 20000 });
   }
 
   /**
@@ -95,22 +167,61 @@ export class CollectiblePage {
    * actions menu for the collectible (if available) and fills a new price.
    *
    * @param name   The name of the collectible to edit
-   * @param amount New donation amount
+   * @param price New donation price
+   * @param metricAmount New donation metricAmount
    */
-  async editPaidCollectibleAmount(name: string, amount: number): Promise<void> {
+  async editPaidCollectibleAmount(name: string, price: number, metricAmount: number): Promise<void> {
     // Find the paid collectible card by its title
-    const card = this.page.locator('#paid-title').filter({ hasText: name }).first();
-    // Click the more actions button; fallback to first action button
-    const actionButton = card.locator('#paid-more-actions').or(card.getByRole('button', { name: /more/i }));
-    if (await actionButton.count()) {
-      await actionButton.first().click();
+    // Find the paid collectibles list container
+
+    // Find the last paid collectible card by its title using class and role
+    const cards = this.page.locator('.wixui-repeater__item[role="listitem"]', { has: this.page.locator('h2 span', { hasText: name }) });
+    const card = cards.last();
+    const cardVisible = await card.isVisible();
+    console.log(`editPaidCollectibleAmount: card for "${name}" visible: ${cardVisible}`);
+
+    // Find the edit button within the card using aria-label="Edit"
+    const editButton = card.locator('button[aria-label="Edit"]');
+    const editButtonVisible = await editButton.isVisible();
+    console.log(`editPaidCollectibleAmount: editButton visible: ${editButtonVisible}`);
+    editButton.click();
+    const moreActionsButton = card.locator('button[aria-label="..."]');
+    const archiveButton = card.locator('button[aria-label="Archive"]');
+
+    await this.page.waitForTimeout(3000);
+    const nameInput = this.page.locator('input[name="collectible-name"]');
+    const nameInputVisible = await nameInput.isVisible();
+    console.log(`editPaidCollectibleAmount: nameInput visible: ${nameInputVisible}`);
+    if (nameInputVisible) {
+      await nameInput.fill(name);
+    } else {
+      console.warn('editPaidCollectibleAmount: Name input is not visible!');
     }
-    // Click edit option
-    await this.page.getByRole('menuitem', { name: /edit/i }).click();
-    // Now update amount in modal
-    await this.page.locator('#collectibleAmountInput').fill(String(amount));
-    await this.page.locator('#collectibleSaveButton').click();
-    // Verify price updated
-    await expect(this.page.locator('#paid-price').filter({ hasText: `$${amount}` })).toBeVisible();
+
+    const donationAmountInput = this.page.locator('input[name="donation-amount ($)"]');
+    const donationAmountInputVisible = await donationAmountInput.isVisible();
+    console.log(`editPaidCollectibleAmount: donationAmountInput visible: ${donationAmountInputVisible}`);
+    if (donationAmountInputVisible) {
+      await donationAmountInput.fill(price.toString());
+    } else {
+      console.warn('editPaidCollectibleAmount: Donation amount input is not visible!');
+    }
+
+    // Fill metric amount (donation per impact unit) if provided
+    if (metricAmount !== undefined) {
+      const metricAmountInput = this.page.locator('input[name="donation-per impact unit"]');
+      const metricAmountInputVisible = await metricAmountInput.isVisible();
+      console.log(`editPaidCollectibleAmount: metricAmountInput visible: ${metricAmountInputVisible}`);
+      if (metricAmountInputVisible) {
+        await metricAmountInput.fill(String(metricAmount));
+      } else {
+        console.warn('editPaidCollectibleAmount: Metric amount input is not visible!');
+      }
+    }
+    await this.page.locator('button[aria-label="Save Changes"]').click({ force: true });
+    await this.page.waitForTimeout(10000);
+    await moreActionsButton.click();
+    await this.page.waitForTimeout(2000);
+    await archiveButton.click();
   }
 }

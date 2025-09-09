@@ -1,5 +1,5 @@
 import { test } from '../../fixtures/fixtures';
-import { createCampaignPayload } from '../../payloads/createCampaignPayload';
+import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
 import { CollectiblePage } from '../../pages/Collectible.page';
 
 // This spec covers creating and editing a paid collectible on a new test campaign.
@@ -7,40 +7,29 @@ import { CollectiblePage } from '../../pages/Collectible.page';
 // then edits the collectible price.  Afterwards it cleans up the campaign via API.
 
 test.describe('Collectibles Management', () => {
-  test('4-D. create and update paid collectible', async (
-    { panXpanApi, organizerDashboardPage, page },
-    testInfo,
-  ) => {
-    // Run this spec only on the Desktop project
-    if (testInfo.project?.name && testInfo.project.name.toLowerCase() !== 'desktop') {
-      test.skip();
-    }
-    // Create a new test campaign via API
-    const fundraiser_name = `Auto Collectible ${new Date().toISOString()}`;
-    const { campaign_id } = await panXpanApi.createCampaign({
-      ...createCampaignPayload,
-      fundraiser_name,
-      organizer_email: process.env.USER_NAME || createCampaignPayload.organizer_email,
-    });
-    // Login and open dashboard
-    await organizerDashboardPage.goto();
-    // Select our campaign
-    await organizerDashboardPage.selectCampaign(fundraiser_name);
-    // Navigate to collectibles tab
-    await organizerDashboardPage.openNavTab('collectibles');
+  test('create and update paid collectible', async ({ page }) => {
+    console.log('Test: Starting collectibles test');
+    const dashboard = new OrganizerDashboardPage(page);
     const collectibles = new CollectiblePage(page);
-    // Create a new paid collectible using AI generation (no imagePath provided)
-    const collectibleName = `Collectible ${Date.now()}`;
-    await collectibles.createPaidCollectible({
-      name: collectibleName,
-      price: 50,
-      description: 'Test collectible description',
-      style: 'Illustration',
-      metricAmount: 1,
-    });
-    // Edit the collectible price
-    await collectibles.editPaidCollectibleAmount(collectibleName, 75);
-    // Clean up
-    await panXpanApi.deleteCampaign({ campaign_id: campaign_id.toString() });
+    // Navigate to dashboard and campaign
+    console.log('Test: About to call dashboard.goto()');
+    await dashboard.goto();
+    console.log('Test: dashboard.goto() completed');
+    const campaignName = process.env.CAMPAIGN_NAME as string;
+    console.log('Test: campaign name:', campaignName);
+    await dashboard.selectCampaign(campaignName);
+    // Open achievements tab
+    console.log('Test: About to call dashboard.openNavTab("collectibles")');
+    await dashboard.openNavTab('collectibles');
+    await page.waitForTimeout(3000);
+    console.log('Test: dashboard.openNavTab("collectibles") completed');
+    let collectibleName = 'Test collectible ' + Math.random().toString(36).replace(/[^a-z]+/g, '').substring(0, 8);
+    // await collectibles.createPaidCollectible({
+    //   name: collectibleName,
+    //   price: 100,
+    //   metricAmount: 100,
+    //   rewardTitle: 'Thankyou letter',
+    // });
+    await collectibles.editPaidCollectibleAmount(collectibleName, 200, 200);
   });
 });

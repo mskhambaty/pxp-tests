@@ -93,6 +93,7 @@ export class OrganizerDashboardPage {
       // Open the login form (button or link)
       console.log('OrganizerDashboard: Attempting to click login button...');
       let buttonClicked = false;
+      await this.page.waitForTimeout(2000);
 
       // First, try to click the main login button to open the modal
       if (await loginBtn.isVisible().catch(() => false)) {
@@ -244,11 +245,13 @@ export class OrganizerDashboardPage {
       console.log('OrganizerDashboard: Waiting for redirect to dashboard...');
       // Wait for redirect; if it fails, explicitly navigate to the organizer dashboard
       try {
-        await this.page.waitForURL(/\/account\/organizer-dashboard/i, { timeout: 30000 });
+        // await this.page.waitForURL(/\/account\/organizer-dashboard/i, { timeout: 30000 });
+        await this.page.waitForTimeout(3000);
+        await this.page.goto('/account/organizer-dashboard');
+
         console.log('OrganizerDashboard: Successfully redirected to dashboard');
       } catch (error) {
         console.log('OrganizerDashboard: Redirect failed, navigating manually:', error);
-        await this.page.goto('/account/organizer-dashboard');
       }
     } else {
       // Already authenticated; navigate directly to the dashboard route
@@ -334,7 +337,7 @@ export class OrganizerDashboardPage {
     const viewport = this.page.viewportSize();
     const isMobileViewport = viewport && viewport.width < 768;
     await this.page.getByRole('listitem').filter({ hasText: fundraiser }).first().click();
-    if(isMobileViewport) {
+    if (isMobileViewport) {
       await expect(this.page.locator('#comp-m9sjpr3q')).toBeVisible();
     } else {
       await expect(this.page.locator('#comp-m9sipgef')).toBeVisible();

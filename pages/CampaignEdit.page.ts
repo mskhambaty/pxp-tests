@@ -25,11 +25,11 @@ export class CampaignEditPage {
     await this.page.waitForTimeout(6000);
     await this.page.locator('button[aria-label="Save Changes"]').click();
     // Persist the campaign name so other tests can consume it next run
-    process.env.CAMPAIGN_NAME = newTitle;
-
+    
     // After saving, verify that the campaign title is updated in the UI.
     const titleLocator = this.page.locator('#comp-m9sjpr3q h3 span.wixui-rich-text__text');
     await expect(titleLocator).toBeVisible();
+    process.env.CAMPAIGN_NAME = newTitle;
   }
   /**
    * Navigates to the specified campaign public page and checks if the title matches the expected string.

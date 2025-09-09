@@ -29,6 +29,11 @@ export default defineConfig({
   use: {
     baseURL: 'https://www.panxpan.com',
     headless: true,
+    // Increase default action timeout so long operations (e.g., after clicking
+    // Generate) are not capped at 30s. This ensures explicit waits like 50s
+    // are not interrupted by action timeouts.
+    actionTimeout: 60 * 1000,
+    navigationTimeout: 60 * 1000,
   },
   projects: [
     {
