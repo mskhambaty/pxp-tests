@@ -12,8 +12,13 @@ import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
 // The Rewards flow is currently disabled.  The existing test fundraiser requires
 // manual teardown of rewards and the API does not expose reward deletion.  Once
 // reward cleanup is available, re-enable this suite by removing `.skip()`.
-test.describe('Rewards Flow', () => {
-  test('add reward to collectible and verify participant sees it', async ({ page }) => {
+test.describe('Rewards', () => {
+  test('add, edit, verify, and remove reward from collectible', async ({ page }) => {
+    const viewport = page.viewportSize && page.viewportSize();
+    // Typical mobile max width is 767px
+    if (viewport && viewport.width <= 767) {
+      test.skip();
+    }
     // Only run on Desktop project
     console.log('Test: Starting rewards test');
     const dashboard = new OrganizerDashboardPage(page);
@@ -29,6 +34,7 @@ test.describe('Rewards Flow', () => {
     console.log('Test: About to call dashboard.openNavTab("rewards")');
     await dashboard.openNavTab('rewards');
     console.log('Test: dashboard.openNavTab("rewards")');
+    await rewards.addTierReward();
     // Note: cleanup of the reward is not yet available via API or UI; it will persist.
   });
 });

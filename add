@@ -1,0 +1,58 @@
+
+Running 4 tests using 1 worker
+
+Test: Starting collectibles test
+Test: About to call dashboard.goto()
+OrganizerDashboard: Starting goto()
+OrganizerDashboard: Navigated to /
+OrganizerDashboard: Waited for page load
+OrganizerDashboard: Viewport size: { width: [33m1280[39m, height: [33m720[39m } isMobile: [33mfalse[39m
+OrganizerDashboard: Checking login button visibility...
+OrganizerDashboard: Login button visibility: {
+  loginBtn: [33mtrue[39m,
+  loginLnk: [33mfalse[39m,
+  loginBtnByText: [33mtrue[39m,
+  loginWithEmailBtn: [33mfalse[39m,
+  loginByTestId: [33mfalse[39m
+}
+OrganizerDashboard: isLoggedOut: [33mtrue[39m
+OrganizerDashboard: User is logged out, attempting login...
+OrganizerDashboard: Environment variables check: { hasEmail: [33mtrue[39m, hasPassword: [33mtrue[39m, emailLength: [33m24[39m }
+OrganizerDashboard: Attempting to click login button...
+OrganizerDashboard: Clicking main loginBtn to open modal
+OrganizerDashboard: Found Log in with Email button in modal, clicking it
+OrganizerDashboard: Button clicked: [33mtrue[39m
+OrganizerDashboard: Waiting for login form to appear...
+OrganizerDashboard: Login form appeared
+OrganizerDashboard: Looking for email and password inputs...
+OrganizerDashboard: Input visibility: { emailInputById: [33mfalse[39m, passwordInputById: [33mfalse[39m }
+OrganizerDashboard: Filling email with type selector
+OrganizerDashboard: Email filled with type selector
+OrganizerDashboard: Password input visibility after wait: { byType: [33mtrue[39m }
+OrganizerDashboard: Filling password with type selector
+OrganizerDashboard: Password filled with type selector
+OrganizerDashboard: Looking for submit button...
+OrganizerDashboard: Submit button visibility: { submit: [33mtrue[39m, submitByTestId: [33mtrue[39m, submitByAriaLabel: [33mtrue[39m }
+OrganizerDashboard: Clicking submit button by aria-label
+OrganizerDashboard: Waiting for redirect to dashboard...
+OrganizerDashboard: Successfully redirected to dashboard
+Test: dashboard.goto() completed
+Test: campaign name: Test Campaign 2025-09-03T12:54:02.849Z
+Terminate batch job (Y/N)? 
+
+  4 did not run
+[EmailReporter] Configuration check:
+  SEND_REPORT_EMAIL: false
+  MAILGUN_API_KEY: [SET]
+  MAILGUN_DOMAIN: your-mailgun-domain
+  EMAIL_TO: email-to-send-report
+[EmailReporter] Email reporting disabled. Completed run: passed=0, failed=0, skipped=0
+[SlackReporter] Configuration check:
+  SEND_SLACK_NOTIFICATION: false
+  SLACK_WEBHOOK_URL: [SET]
+[SlackReporter] Slack notifications disabled. Completed run: passed=0, failed=0, skipped=0
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

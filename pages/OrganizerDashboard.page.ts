@@ -129,6 +129,7 @@ export class OrganizerDashboardPage {
 
       console.log('OrganizerDashboard: Button clicked:', buttonClicked);
       console.log('OrganizerDashboard: Waiting for login form to appear...');
+      this.page.locator('button[aria-label="Log in with Email"]').click();
 
       // Wait for the login form to appear
       try {
@@ -334,12 +335,28 @@ export class OrganizerDashboardPage {
    * campaign renders as a list item (li) containing the campaign’s name.
    */
   async selectCampaign(fundraiser: string): Promise<void> {
+    // Add debugging for viewport and campaign selection
     const viewport = this.page.viewportSize();
+    console.log('selectCampaign: viewport size:', viewport);
     const isMobileViewport = viewport && viewport.width < 768;
-    await this.page.getByRole('listitem').filter({ hasText: fundraiser }).first().click();
+    console.log('selectCampaign: isMobileViewport:', isMobileViewport);
+    console.log('selectCampaign: Attempting to select campaign:', fundraiser);
+    // Wait for at least one listitem to be visible before proceeding
+    await this.page.getByRole('listitem').first().waitFor({ state: 'visible', timeout: 10000 });
+    const campaignLocator = this.page.getByRole('listitem').filter({ hasText: fundraiser }).first();
+    const campaignCount = await campaignLocator.count();
+    console.log('selectCampaign: Matching campaign count:', campaignCount);
+    if (campaignCount === 0) {
+      throw new Error(`selectCampaign: No campaign found with name: ${fundraiser}`);
+    }
+    console.log('selectCampaign: Clicking campaign locator');
+    await this.page.waitForTimeout(4000);
+    await campaignLocator.locator('.collectiblesButton[dir="ltr"]').click({ force: true });
     if (isMobileViewport) {
+      console.log('selectCampaign: Expecting mobile dashboard selector #comp-m9sjpr3q');
       await expect(this.page.locator('#comp-m9sjpr3q')).toBeVisible();
     } else {
+      console.log('selectCampaign: Expecting desktop dashboard selector #comp-m9sipgef');
       await expect(this.page.locator('#comp-m9sipgef')).toBeVisible();
     }
   }
