@@ -6,8 +6,7 @@ import { test, expect } from '../fixtures/fixtures';
 // Yopmail, and verifies the participant sees all purchased collectibles in
 // their dashboard.
 
-test('should donate to a fundraise', async ({ campaignPage, participantDashboardPage, yopmail }) => {
-  test.slow();
+const runDonationFlow = async ({ campaignPage, participantDashboardPage, yopmail }: any) => {
   // Use the slug for the special test fundraiser
   await campaignPage.open('test-fundraiser-(donations-possible)');
   await campaignPage.donate({
@@ -40,4 +39,9 @@ test('should donate to a fundraise', async ({ campaignPage, participantDashboard
   await expect(
     participantDashboardPage.getDigitalCollectibleWithName('Gold Circle'),
   ).toBeVisible();
+};
+
+test('should donate to a fundraise', async ({ campaignPage, participantDashboardPage, yopmail }) => {
+  test.slow();
+  await runDonationFlow({ campaignPage, participantDashboardPage, yopmail });
 });

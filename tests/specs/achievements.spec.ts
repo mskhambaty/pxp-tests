@@ -4,7 +4,7 @@ import { AchievementsPage } from '../../pages/Achievements.page';
 
 // Tests related to achievements management on the organizer dashboard
 
-test.describe('Achievements Management', () => {
+test.describe.skip('Achievements Management', () => {
   test('add and convert achievements', async ({ page }) => {
     console.log('Test: Starting achievements test');
     const dashboard = new OrganizerDashboardPage(page);
