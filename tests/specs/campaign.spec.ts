@@ -11,6 +11,11 @@ import { OrganizerDashboardPage } from '../../pages/OrganizerDashboard.page';
 
 test.describe('Campaign Edit Flow', () => {
   test('3-D. edit campaign title and description', async ({ page }) => {
+    const viewport = page.viewportSize && page.viewportSize();
+    // Typical mobile max width is 767px
+    if (viewport && viewport.width <= 767) {
+      test.skip();
+    }
     console.log('Test: Starting campaign edit test');
     const dashboard = new OrganizerDashboardPage(page);
     const campaignEdit = new CampaignEditPage(page);

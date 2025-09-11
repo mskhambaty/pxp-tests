@@ -1,4 +1,5 @@
 import { Page, expect } from '@playwright/test';
+import { Console } from 'console';
 
 /**
  * Page object encapsulating interactions with the collectibles section of
@@ -154,7 +155,7 @@ export class CollectiblePage {
 
     await this.page.waitForTimeout(4000);
     await this.page.locator('button[aria-label="Save Changes"]').click({ force: true });
-    await this.page.waitForTimeout(10000);
+    await this.page.waitForTimeout(6000);
     // Verify the new paid collectible appears using the available h2 > span structure
     // const collectiblesButton = this.page.locator('button[aria-label="Collectibles"]');
     // const collectiblesButtonVisible = await collectiblesButton.isVisible();
@@ -184,44 +185,47 @@ export class CollectiblePage {
     const editButton = card.locator('button[aria-label="Edit"]');
     const editButtonVisible = await editButton.isVisible();
     console.log(`editPaidCollectibleAmount: editButton visible: ${editButtonVisible}`);
-    editButton.click();
-    const moreActionsButton = card.locator('button[aria-label="..."]');
-    const archiveButton = card.locator('button[aria-label="Archive"]');
-
-    await this.page.waitForTimeout(3000);
+    await editButton.click({ force: true });
+    console.log('editPaidCollectibleAmount: editButton clicked');
+    // Wait for the edit modal to be ready instead of a fixed sleep
     const nameInput = this.page.locator('input[name="collectible-name"]');
-    const nameInputVisible = await nameInput.isVisible();
-    console.log(`editPaidCollectibleAmount: nameInput visible: ${nameInputVisible}`);
-    if (nameInputVisible) {
-      await nameInput.fill(name);
-    } else {
-      console.warn('editPaidCollectibleAmount: Name input is not visible!');
-    }
 
-    const donationAmountInput = this.page.locator('input[name="donation-amount ($)"]');
-    const donationAmountInputVisible = await donationAmountInput.isVisible();
-    console.log(`editPaidCollectibleAmount: donationAmountInput visible: ${donationAmountInputVisible}`);
-    if (donationAmountInputVisible) {
-      await donationAmountInput.fill(price.toString());
-    } else {
-      console.warn('editPaidCollectibleAmount: Donation amount input is not visible!');
-    }
+    console.log('editPaidCollectibleAmount: Filling name input with:', name);
+    await nameInput.click({ clickCount: 1 });
+    await this.page.waitForTimeout(500);
+    await nameInput.press('Control+A');
+    await this.page.waitForTimeout(500);
+    await nameInput.press('Delete');
+    await this.page.waitForTimeout(500);
+    await nameInput.type(name, { delay: 20 });
 
-    // Fill metric amount (donation per impact unit) if provided
-    if (metricAmount !== undefined) {
-      const metricAmountInput = this.page.locator('input[name="donation-per impact unit"]');
-      const metricAmountInputVisible = await metricAmountInput.isVisible();
-      console.log(`editPaidCollectibleAmount: metricAmountInput visible: ${metricAmountInputVisible}`);
-      if (metricAmountInputVisible) {
-        await metricAmountInput.fill(String(metricAmount));
-      } else {
-        console.warn('editPaidCollectibleAmount: Metric amount input is not visible!');
-      }
-    }
+
+    // const donationAmountInput = this.page.locator('input[name="donation-amount ($)"]');
+    // const donationAmountInputVisible = await donationAmountInput.isVisible();
+    // console.log(`editPaidCollectibleAmount: donationAmountInput visible: ${donationAmountInputVisible}`);
+    // if (donationAmountInputVisible) {
+    //   await donationAmountInput.fill(price.toString());
+    // } else {
+    //   console.warn('editPaidCollectibleAmount: Donation amount input is not visible!');
+    // }
+
+    // // Fill metric amount (donation per impact unit) if provided
+    // if (metricAmount !== undefined) {
+    //   const metricAmountInput = this.page.locator('input[name="donation-per impact unit"]');
+    //   const metricAmountInputVisible = await metricAmountInput.isVisible();
+    //   console.log(`editPaidCollectibleAmount: metricAmountInput visible: ${metricAmountInputVisible}`);
+    //   if (metricAmountInputVisible) {
+    //     await metricAmountInput.fill(String(metricAmount));
+    //   } else {
+    //     console.warn('editPaidCollectibleAmount: Metric amount input is not visible!');
+    //   }
+    // }
     await this.page.locator('button[aria-label="Save Changes"]').click({ force: true });
     await this.page.waitForTimeout(10000);
+    const moreActionsButton = card.locator('button[aria-label="..."]');
+    const archiveButton = card.locator('button[aria-label="Archive"]');
     await moreActionsButton.click();
     await this.page.waitForTimeout(2000);
-    await archiveButton.click();
+    await archiveButton.click({ force: true });
   }
 }

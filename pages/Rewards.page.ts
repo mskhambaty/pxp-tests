@@ -5,7 +5,7 @@ import { Page, expect } from '@playwright/test';
  * assigned to elements in the rewards UI.
  */
 export class RewardsPage {
-  constructor(private page: Page) {}
+  constructor(private page: Page) { }
 
 
   async addTierReward(): Promise<void> {
@@ -26,9 +26,16 @@ export class RewardsPage {
     await editButton.click();
     let newRewardName = "https://www.panxpan.com/test";
     console.log(`RewardsPage: Filling new reward description with: ${newRewardName}`);
-    await this.page.locator('#input_comp-makv289l').fill(newRewardName);
-    await this.page.locator('button[aria-label="Save Changes"]').click();
-    
+    // await this.page.locator('#input_comp-makv289l').fill(newRewardName);
+    await this.page.locator('#input_comp-makv289l').click({ clickCount: 1 }); // select all
+    await this.page.waitForTimeout(500);
+    await this.page.locator('#input_comp-makv289l').press('Control+A');
+    await this.page.waitForTimeout(500);
+    await this.page.locator('#input_comp-makv289l').press('Delete');
+    await this.page.waitForTimeout(500);
+    await this.page.locator('#input_comp-makv289l').type(newRewardName, { delay: 20 });
+    await this.page.locator('button[aria-label="Update Reward"]').click();
+
     const fulfilledCard2 = this.page.locator('.card.fulfilled').filter({
       has: this.page.locator('.content-box a', { hasText: newRewardName })
     });

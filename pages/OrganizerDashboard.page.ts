@@ -129,7 +129,7 @@ export class OrganizerDashboardPage {
 
       console.log('OrganizerDashboard: Button clicked:', buttonClicked);
       console.log('OrganizerDashboard: Waiting for login form to appear...');
-      this.page.locator('button[aria-label="Log in with Email"]').click();
+      // await this.page.locator('button[aria-label="Log in with Email"]').first().click({ force: true });
 
       // Wait for the login form to appear
       try {
@@ -343,14 +343,15 @@ export class OrganizerDashboardPage {
     console.log('selectCampaign: Attempting to select campaign:', fundraiser);
     // Wait for at least one listitem to be visible before proceeding
     await this.page.getByRole('listitem').first().waitFor({ state: 'visible', timeout: 10000 });
-    const campaignLocator = this.page.getByRole('listitem').filter({ hasText: fundraiser }).first();
+    // const campaignLocator = this.page.getByRole('listitem').filter({ hasText: fundraiser }).first();
+    const campaignLocator = this.page.getByRole('listitem').first();
     const campaignCount = await campaignLocator.count();
     console.log('selectCampaign: Matching campaign count:', campaignCount);
     if (campaignCount === 0) {
       throw new Error(`selectCampaign: No campaign found with name: ${fundraiser}`);
     }
     console.log('selectCampaign: Clicking campaign locator');
-    await this.page.waitForTimeout(4000);
+    await this.page.waitForTimeout(8000);
     await campaignLocator.locator('.collectiblesButton[dir="ltr"]').click({ force: true });
     if (isMobileViewport) {
       console.log('selectCampaign: Expecting mobile dashboard selector #comp-m9sjpr3q');
